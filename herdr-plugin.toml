@@ -1,0 +1,11 @@
+id = "claude-restart"
+name = "Claude Restart"
+version = "0.1.0"
+min_herdr_version = "0.9.0"
+description = "Restarts every idle Claude pane with --resume so it picks up the newly installed Claude Code."
+platforms = ["linux", "macos"]
+
+[[actions]]
+id = "restart-all"
+title = "Restart idle Claude panes"
+command = ["sh", "scripts/restart-all.sh"]
