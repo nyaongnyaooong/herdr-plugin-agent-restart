@@ -1,5 +1,5 @@
-id = "claude-restart"
-name = "Claude Restart"
+id = "agent-restart"
+name = "Agent Restart"
 version = "0.1.0"
 min_herdr_version = "0.9.0"
 description = "Restarts every idle Claude pane with --resume so it picks up the newly installed Claude Code."

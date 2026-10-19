@@ -7,7 +7,7 @@ herdr=${HERDR_BIN_PATH:-herdr}
 
 "$herdr" agent list | jq -r '.result.agents[]
     | select(.agent == "claude" and .agent_status == "idle" and .agent_session.value != null)
-    | "\(.pane_id) \(.agent_session.value)"' >"${TMPDIR:-/tmp}/claude-restart.$$"
+    | "\(.pane_id) \(.agent_session.value)"' >"${TMPDIR:-/tmp}/agent-restart.$$"
 
 done_n=0
 fail_n=0
@@ -27,9 +27,9 @@ while read -r pane sid; do
     fi
     "$herdr" pane run "$pane" "claude --resume $sid" >/dev/null
     done_n=$((done_n + 1))
-done <"${TMPDIR:-/tmp}/claude-restart.$$"
-rm -f "${TMPDIR:-/tmp}/claude-restart.$$"
+done <"${TMPDIR:-/tmp}/agent-restart.$$"
+rm -f "${TMPDIR:-/tmp}/agent-restart.$$"
 
 body="${done_n}개 재시작"
 [ "$fail_n" -eq 0 ] || body="$body, ${fail_n}개 종료 안 됨"
-"$herdr" notification show "Claude Restart" --body "$body" >/dev/null
+"$herdr" notification show "Agent Restart" --body "$body" >/dev/null

@@ -1,4 +1,4 @@
-# herdr-plugin-claude-restart
+# herdr-plugin-agent-restart
 
 Claude Code 업데이트 후 herdr 안의 Claude 창을 한 번에 새 버전으로 올린다.
 
@@ -8,7 +8,7 @@ Claude Code 업데이트 후 herdr 안의 Claude 창을 한 번에 새 버전으
 ## 설치
 
 ```sh
-herdr plugin link /Users/jerry.axz-pc/Projects/herdr-plugin/herdr-plugin-claude-restart
+herdr plugin link /Users/jerry.axz-pc/Projects/herdr-plugin/herdr-plugin-agent-restart
 ```
 
 `~/.config/herdr/config.toml` 단축키:
@@ -17,11 +17,11 @@ herdr plugin link /Users/jerry.axz-pc/Projects/herdr-plugin/herdr-plugin-claude-
 [[keys.command]]
 key = "prefix+r"
 type = "plugin_action"
-command = "claude-restart.restart-all"
+command = "agent-restart.restart-all"
 description = "restart idle claude panes"
 ```
 
-수동 실행: `herdr plugin action claude-restart.restart-all`
+수동 실행: `herdr plugin action agent-restart.restart-all`
 
 ## 한계
 
