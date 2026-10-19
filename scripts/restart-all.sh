@@ -22,6 +22,17 @@ while read -r pane; do
     info=$("$herdr" pane process-info --pane "$pane" | jq -r '.result.process_info.foreground_processes[0] | "\(.pid) \(.name)"')
     pid=${info%% *}
     version=${info#* }
+    case "$pid" in
+        ""|*[!0-9]*) continue ;;
+    esac
+    # Linux comm can be "claude" (or truncated), unlike macOS's version name.
+    # /proc identifies the actual running binary, even after the launcher updates.
+    if [ -L "/proc/$pid/exe" ]; then
+        executable=$(readlink "/proc/$pid/exe" 2>/dev/null || true)
+        version=$(basename "$executable" | sed 's/ (deleted)$//')
+    fi
+    # Never terminate a foreground process whose version we cannot identify.
+    printf '%s\n' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([.-][[:alnum:].-]+)?$' || continue
     [ "$version" != "$latest" ] || continue
 
     # herdr's agent_session can be stale (after /clear, or a session with no messages);
