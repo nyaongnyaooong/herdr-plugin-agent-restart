@@ -5,23 +5,31 @@ set -eu
 
 herdr=${HERDR_BIN_PATH:-herdr}
 # Plugin actions may not inherit the login PATH, so fall back to the native install path.
-latest=$(basename "$(readlink "$(command -v claude || echo "$HOME/.local/bin/claude")")")
+claude=$(command -v claude || echo "$HOME/.local/bin/claude")
+# Install the newest build first: Claude's background auto-update can land right after this run starts,
+# leaving every restarted pane one version behind ("Update installed · Restart to update").
+[ -n "${AGENT_RESTART_NO_UPDATE:-}" ] || "$claude" update >/dev/null 2>&1 || true
+latest=$(basename "$(readlink "$claude")")
 sessions=$HOME/.claude/sessions
 list=${TMPDIR:-/tmp}/agent-restart.$$
 trap 'rm -f "$list"' EXIT
 
 # Optional first argument limits the run to one pane.
+# "done" is an idle pane whose finished turn herdr's CLI has not marked seen; viewing it in the TUI does not clear it.
 "$herdr" agent list | jq -r --arg only "${1:-}" '.result.agents[]
-    | select(.agent == "claude" and .agent_status == "idle")
+    | select(.agent == "claude" and (.agent_status == "idle" or .agent_status == "done"))
     | select($only == "" or .pane_id == $only) | .pane_id' >"$list"
 
 done_n=0
 fail_n=0
 while read -r pane; do
     # The native installer names the process after its version (e.g. "2.1.303").
-    info=$("$herdr" pane process-info --pane "$pane" | jq -r '.result.process_info.foreground_processes[0] | "\(.pid) \(.name)"')
+    info=$("$herdr" pane process-info --pane "$pane" | jq -r '.result.process_info.foreground_processes[0]
+        | "\(.pid) \(.name)\(.argv[1:] | map(" " + @sh) | add // "")"')
     pid=${info%% *}
-    version=${info#* }
+    rest=${info#* }
+    version=${rest%% *}
+    args=${rest#"$version"}
     case "$pid" in
         ""|*[!0-9]*) continue ;;
     esac
@@ -54,6 +62,9 @@ while read -r pane; do
     # A session with no messages has no transcript and cannot be resumed.
     if [ -n "$sid" ] && find "$HOME/.claude/projects" -maxdepth 2 -name "$sid.jsonl" | grep -q .; then
         "$herdr" pane run "$pane" "claude --resume $sid" >/dev/null
+    elif case "$args" in *"'--fork-session'"*) true ;; *) false ;; esac; then
+        # A fork is written only on its first message; re-forking from the same source restores it.
+        "$herdr" pane run "$pane" "claude$args" >/dev/null
     else
         "$herdr" pane run "$pane" "claude" >/dev/null
     fi

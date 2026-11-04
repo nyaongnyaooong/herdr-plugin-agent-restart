@@ -48,7 +48,7 @@ else:
  with (Path(os.environ['HOME'])/'calls').open('a') as f: f.write(json.dumps(a)+'\\n')
 ''')
                 mock.chmod(0o700)
-                env = dict(os.environ, HOME=str(home), PATH=str(bin_dir)+':/usr/bin:/bin', HERDR_BIN_PATH=str(mock), TEST_PID=str(proc.pid), TEST_STATUS=status)
+                env = dict(os.environ, HOME=str(home), PATH=str(bin_dir)+':/usr/bin:/bin', HERDR_BIN_PATH=str(mock), AGENT_RESTART_NO_UPDATE='1', TEST_PID=str(proc.pid), TEST_STATUS=status)
                 result = subprocess.run(['sh', str(SCRIPT)], env=env, capture_output=True, text=True, timeout=20)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 calls = [json.loads(line) for line in (home/'calls').read_text().splitlines()]
